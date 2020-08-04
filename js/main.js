@@ -1,4 +1,4 @@
-const margin = {top: 20, right: 20, bottom: 40, left: 20},
+const margin = {top: 20, right: 20, bottom: 50, left: 20},
   gutter = 30,
   bandwidth = 7,
   height = 91 * bandwidth + margin.top + margin.bottom,
@@ -10,6 +10,7 @@ d3.csv("data/population.csv", d3.autoType).then(draw);
 
 function draw(data) {
   let playing = false;
+  let sliding = false;
 
   let svg = d3.select("#plot-holder")
     .append("svg")
@@ -28,9 +29,15 @@ function draw(data) {
       .tickFormat(d3.format("d"))
       .displayValue(false)
       .default(1971)
-      .on("start", val => chart.redraw(val, 0))
-      .on("drag", val => chart.redraw(val, 0))
-      .on("end", val => chart.redraw(val, 0));
+      .on("start", val => {
+        chart.redraw(val, 0);
+        sliding = true;
+      })
+      .on("drag", val => {
+        chart.redraw(val, 0);
+        sliding = true;
+      })
+      .on("end", val => slideend(val));
 
   let button = d3.select("#button-holder")
     .append("button")
@@ -49,18 +56,26 @@ function draw(data) {
     d3.event.preventDefault();
 
     let wasPlaying = playing;
+    if (playing) !playing;
+
     let delta = Math.round((slider.max() - slider.min()) * d3.event.deltaY / 250);
     let newYear = slider.value() + delta;
     newYear = newYear >= slider.min() ? newYear <= slider.max() ? newYear : slider.max() : slider.min();
 
-    if (playing) !playing;
+    if (newYear === slider.max()) {
+      playing = false;
+      wasPlaying = false;
+    }
+
     slider.value(newYear);
     chart.redraw(newYear, 0);
-    if (wasPlaying) playing = true;
+    if (wasPlaying) {
+      playing = true;
+    }
   })
 
   async function play() {
-    while(playing && slider.value() < slider.max()) {
+    while(playing && (slider.value() < slider.max()) && !sliding) {
       slider.value(slider.value() + 1);
       chart.redraw(slider.value(), delay);
       await timer(delay);
@@ -83,6 +98,13 @@ function draw(data) {
     chart.redraw(d3.min(data, d => d.year), delay);
     await timer(delay);
     playing = true;
+    play();
+  }
+
+  async function slideend(x) {
+    chart.redraw(x, 0);
+    await timer(delay / 3);
+    sliding = false;
     play();
   }
 }

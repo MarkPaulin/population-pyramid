@@ -24,20 +24,20 @@ function drawPyramid(data) {
       .range([height - margin.bottom, margin.top]);
 
   let x1Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom})`)
+      .attr("transform", `translate(0, ${height - margin.bottom + 10})`)
       .call(d3.axisBottom(x1)
               .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom)))
+              .tickSize(-(height - margin.top - margin.bottom + 10)))
       .call(g => g.select(".domain").remove())
       .call(g => g.selectAll(".tick line")
                 .attr("stroke", "white")
                 .attr("stroke-width", 0.5));
 
   let x2Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom})`)
+      .attr("transform", `translate(0, ${height - margin.bottom + 10})`)
       .call(d3.axisBottom(x2)
               .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom)))
+              .tickSize(-(height - margin.top - margin.bottom + 10)))
       .call(g => g.select(".domain").remove())
       .call(g => g.selectAll(".tick line")
                 .attr("stroke", "white")
