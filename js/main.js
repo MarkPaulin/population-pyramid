@@ -1,6 +1,6 @@
 const margin = {top: 20, right: 20, bottom: 40, left: 20},
   gutter = 30,
-  bandwidth = 5,
+  bandwidth = 7,
   height = 91 * bandwidth + margin.top + margin.bottom,
   width = 2 * 300 + gutter + margin.left + margin.right;
 
@@ -44,6 +44,20 @@ function draw(data) {
     .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`)
       .call(slider);
+
+  svg.on("mousewheel", () => {
+    d3.event.preventDefault();
+
+    let wasPlaying = playing;
+    let delta = Math.round((slider.max() - slider.min()) * d3.event.deltaY / 250);
+    let newYear = slider.value() + delta;
+    newYear = newYear >= slider.min() ? newYear <= slider.max() ? newYear : slider.max() : slider.min();
+
+    if (playing) !playing;
+    slider.value(newYear);
+    chart.redraw(newYear, 0);
+    if (wasPlaying) playing = true;
+  })
 
   async function play() {
     while(playing && slider.value() < slider.max()) {
