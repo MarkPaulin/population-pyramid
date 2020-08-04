@@ -1,79 +1,78 @@
+const margin = {top: 20, right: 20, bottom: 40, left: 20},
+  gutter = 30,
+  bandwidth = 5,
+  height = 91 * bandwidth + margin.top + margin.bottom,
+  width = 2 * 300 + gutter + margin.left + margin.right;
 
-d3.csv("data/population.csv", d3.autoType).then(draw)
+const delay = 750;
 
-const margin = {top: 20, right: 20, bottom: 40, left: 20}
-const gutter = 20
-const bar_height = 5
-const height = 91 * bar_height + margin.top + margin.bottom
-const width = 2 * 300 + gutter + margin.left + margin.right
-
-let svg = d3.select("#plot")
-  .append("svg")
-    .attr("height", height)
-    .attr("width", width)
-
-let xTicks = [0, 2500, 5000, 7500, 10000, 12500, 15000]
+d3.csv("data/population.csv", d3.autoType).then(draw);
 
 function draw(data) {
-  plot_data = data.filter(d => d.year === 2019)
+  let playing = false;
 
-  let x1 = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.MYE)]).nice()
-      .range([(width - gutter) / 2, margin.left])
+  let svg = d3.select("#plot-holder")
+    .append("svg")
+      .attr("height", height)
+      .attr("width", width)
+      .attr("id", "plot");
 
-  let x2 = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.MYE)]).nice()
-      .range([(width + gutter) / 2, width - margin.right])
+  let chart = drawPyramid(data);
+  firstdraw();
 
-  let y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.age) + 1])
-      .range([height - margin.bottom, margin.top])
+  let slider = d3.sliderRight()
+      .min(d3.min(data, d => d.year))
+      .max(d3.max(data, d => d.year))
+      .step(1)
+      .height(height - margin.top - margin.bottom)
+      .tickFormat(d3.format("d"))
+      .displayValue(false)
+      .default(1971)
+      .on("start", val => chart.redraw(val, 0))
+      .on("drag", val => chart.redraw(val, 0))
+      .on("end", val => chart.redraw(val, 0));
 
-  x1Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom})`)
-      .call(d3.axisBottom(x1)
-              .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom)))
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick line")
-                .attr("stroke", "white")
-                .attr("stroke-width", 0.5))
+  let button = d3.select("#button-holder")
+    .append("button")
+      .text("play")
+      .on("click", buttonclick);
 
-  x2Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom})`)
-      .call(d3.axisBottom(x2)
-              .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom)))
-      .call(g => g.select(".domain").remove())
-      .call(g => g.selectAll(".tick line")
-                .attr("stroke", "white")
-                .attr("stroke-width", 0.5))
+  d3.select("#slider-holder")
+    .append("svg")
+      .attr("width", 100)
+      .attr("height", height)
+    .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`)
+      .call(slider);
 
-  yAxis = g => g
-      .attr("transform", `translate(${width / 2}, ${-bar_height / 2})`)
-      .call(d3.axisLeft(y).tickPadding(0))
-      .call(g => g.selectAll(".domain").remove())
-      .call(g => g.selectAll(".tick line").remove())
-      .call(g => g.selectAll(".tick text")
-              .attr("text-anchor", "middle")
-              .attr("x", 0))
+  async function play() {
+    while(playing && slider.value() < slider.max()) {
+      slider.value(slider.value() + 1);
+      chart.redraw(slider.value(), delay);
+      await timer(delay);
+    }
+  }
 
-  svg.append("g")
-    .selectAll("rect")
-    .data(plot_data)
-    .enter().append("rect")
-      .attr("fill", d => d3.schemeSet2[d.gender === "F" ? 0 : 1])
-      .attr("x", d => d.gender === "F" ? x1(d.MYE) : x2(0))
-      .attr("y", d => y(d.age + 1))
-      .attr("width", d => d.gender === "F" ? x1(0) - x1(d.MYE) : x2(d.MYE) - x2(0))
-      .attr("height", d => y(d.age) - y(d.age + 1) - 1)
+  async function buttonclick() {
+    if (slider.value() === slider.max()) {
+      playing = false;
+      slider.value(slider.min());
+      chart.redraw(slider.value(), 0);
+      await timer(delay);
+    }
 
-  svg.append("g")
-      .call(x1Axis)
+    playing = !playing;
+    if (playing) play();
+  }
 
-  svg.append("g")
-      .call(x2Axis)
+  async function firstdraw() {
+    chart.redraw(d3.min(data, d => d.year), delay);
+    await timer(delay);
+    playing = true;
+    play();
+  }
+}
 
-  svg.append("g")
-      .call(yAxis)
+function timer(ms) {
+ return new Promise(res => setTimeout(res, ms));
 }
