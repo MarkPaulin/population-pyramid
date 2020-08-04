@@ -12,4 +12,11 @@ ni_data <- filter(raw_data, area == "1. Northern Ireland", gender != "All person
 ni_data <- select(ni_data, year, gender, age, MYE)
 ni_data <- mutate(ni_data, gender = str_sub(gender, 1, 1))
 
+ni_data <- ni_data %>% 
+  group_by(year, age) %>% 
+  mutate(
+    flag = row_number(MYE) == 2,
+    min = min(MYE)
+  )
+
 write_csv(ni_data, "data/population.csv")
