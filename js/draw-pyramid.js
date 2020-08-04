@@ -24,27 +24,27 @@ function drawPyramid(data) {
       .range([height - margin.bottom, margin.top]);
 
   let x1Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom + 10})`)
+      .attr("transform", `translate(0, ${height - margin.bottom + 20})`)
       .call(d3.axisBottom(x1)
               .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom + 10)))
+              .tickSize(-(height - margin.top - margin.bottom + 20)))
       .call(g => g.select(".domain").remove())
       .call(g => g.selectAll(".tick line")
                 .attr("stroke", "white")
                 .attr("stroke-width", 0.5));
 
   let x2Axis = g => g
-      .attr("transform", `translate(0, ${height - margin.bottom + 10})`)
+      .attr("transform", `translate(0, ${height - margin.bottom + 20})`)
       .call(d3.axisBottom(x2)
               .tickValues(xTicks)
-              .tickSize(-(height - margin.top - margin.bottom + 10)))
+              .tickSize(-(height - margin.top - margin.bottom + 20)))
       .call(g => g.select(".domain").remove())
       .call(g => g.selectAll(".tick line")
                 .attr("stroke", "white")
                 .attr("stroke-width", 0.5));
 
   let yAxis = g => g
-      .attr("transform", `translate(${width / 2}, ${-bandwidth / 2})`)
+      .attr("transform", `translate(${width / 2}, 0)`)
       .call(d3.axisLeft(y).tickPadding(0))
       .call(g => g.selectAll(".domain").remove())
       .call(g => g.selectAll(".tick line").remove())
@@ -65,7 +65,7 @@ function drawPyramid(data) {
 
   let rect = group.selectAll("rect .bar");
 
-  let comparison = group.selectAll("rect .comp")
+  let comparison = group.selectAll("rect .comp");
 
   let label = svg.append("g")
       .style("font", "bold 20px sans-serif")
@@ -84,7 +84,7 @@ function drawPyramid(data) {
             enter => enter.append("rect")
               .attr("fill", d => colourScale2(d.gender))
               .attr("x", d => d.gender === "F" ? x1(0) : x2(0))
-              .attr("y", d => y(d.age))
+              .attr("y", d => y(d.age) + bandwidth)
               .attr("width", 0)
               .attr("height", bandwidth - 1)
               .attr("class", "bar"),
@@ -102,7 +102,7 @@ function drawPyramid(data) {
             enter => enter.append("rect")
               .attr("fill", d => colourScale1(d.gender))
               .attr("x", d => d.gender === "F" ? x1(0) : x2(0))
-              .attr("y", d => y(d.age))
+              .attr("y", d => y(d.age) + bandwidth)
               .attr("width", 0)
               .attr("height", bandwidth - 1)
               .attr("class", "comp"),
@@ -117,12 +117,12 @@ function drawPyramid(data) {
       rect.transition(t)
            .attr("x", d => d.gender === "F" ? x1(d.MYE) : x2(0))
            .attr("width", d => d.gender === "F" ? x1(0) - x1(d.MYE) : x2(d.MYE) - x2(0))
-           .attrTween("y", d => interpolateInverseCubic(y(d.age), y(d.age) - bandwidth));
+           .attrTween("y", d => interpolateInverseCubic(y(d.age) + bandwidth, y(d.age)));
 
       comparison.transition(t)
           .attr("x", d => d.gender === "F" ? x1(d.min) : x2(0))
           .attr("width", d => d.gender == "F" ? x1(0) - x1(d.min) : x2(d.min) - x2(0))
-          .attrTween("y", d => interpolateInverseCubic(y(d.age), y(d.age) - bandwidth));
+          .attrTween("y", d => interpolateInverseCubic(y(d.age) + bandwidth, y(d.age)));
 
       gx1.raise();
       gx2.raise();

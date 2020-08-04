@@ -11,6 +11,7 @@ d3.csv("data/population.csv", d3.autoType).then(draw);
 function draw(data) {
   let playing = false;
   let sliding = false;
+  let outlined = false;
 
   let svg = d3.select("#plot-holder")
     .append("svg")
@@ -19,6 +20,8 @@ function draw(data) {
       .attr("id", "plot");
 
   let chart = drawPyramid(data);
+  let outline = drawOutline(data);
+
   firstdraw();
 
   let slider = d3.sliderRight()
@@ -44,6 +47,11 @@ function draw(data) {
       .text("play")
       .on("click", buttonclick);
 
+  let outlinebutton = d3.select("#outline-button-holder")
+    .append("button")
+      .text("outline")
+      .on("click", outlineClick);
+
   d3.select("#slider-holder")
     .append("svg")
       .attr("width", 100)
@@ -56,19 +64,21 @@ function draw(data) {
     d3.event.preventDefault();
 
     let wasPlaying = playing;
-    if (playing) !playing;
+    if (playing) playing = false;
 
     let delta = Math.round((slider.max() - slider.min()) * d3.event.deltaY / 250);
     let newYear = slider.value() + delta;
     newYear = newYear >= slider.min() ? newYear <= slider.max() ? newYear : slider.max() : slider.min();
 
     if (newYear === slider.max()) {
-      playing = false;
       wasPlaying = false;
     }
 
     slider.value(newYear);
     chart.redraw(newYear, 0);
+
+    outline.raise();
+
     if (wasPlaying) {
       playing = true;
     }
@@ -78,6 +88,13 @@ function draw(data) {
     while(playing && (slider.value() < slider.max()) && !sliding) {
       slider.value(slider.value() + 1);
       chart.redraw(slider.value(), delay);
+
+      if (slider.value() == slider.max()) {
+        playing = false;
+      }
+
+      outline.raise();
+
       await timer(delay);
     }
   }
@@ -107,8 +124,23 @@ function draw(data) {
     sliding = false;
     play();
   }
+
+  function hideOutline() {
+    outline.selectAll("path")
+      .attr("stroke", "none");
+  }
+
+  function outlineClick() {
+    if (!outlined) {
+      outline.redraw(slider.value());
+      outlined = true;
+    } else {
+      hideOutline();
+      outlined = false;
+    }
+  }
 }
 
 function timer(ms) {
- return new Promise(res => setTimeout(res, ms));
+  return new Promise(res => setTimeout(res, ms));
 }
