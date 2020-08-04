@@ -44,7 +44,7 @@ function drawPyramid(data) {
                 .attr("stroke-width", 0.5));
 
   let yAxis = g => g
-      .attr("transform", `translate(${width / 2}, 0)`)
+      .attr("transform", `translate(${width / 2}, ${bandwidth / 2})`)
       .call(d3.axisLeft(y).tickPadding(0))
       .call(g => g.selectAll(".domain").remove())
       .call(g => g.selectAll(".tick line").remove())
