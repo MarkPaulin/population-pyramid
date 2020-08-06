@@ -32,10 +32,7 @@ function draw(data) {
       .tickFormat(d3.format("d"))
       .displayValue(false)
       .default(1971)
-      .on("start", val => {
-        chart.redraw(val, 0);
-        sliding = true;
-      })
+      .on("start", val => chart.redraw(val, 0))
       .on("drag", val => {
         chart.redraw(val, 0);
         sliding = true;
@@ -85,16 +82,17 @@ function draw(data) {
   })
 
   async function play() {
-    while(playing && (slider.value() < slider.max()) && !sliding) {
-      slider.value(slider.value() + 1);
-      chart.redraw(slider.value(), delay);
+    while(true) {
+      if (playing && (slider.value() < slider.max()) && !sliding) {
+        slider.value(slider.value() + 1);
+        chart.redraw(slider.value(), delay);
 
-      if (slider.value() == slider.max()) {
-        playing = false;
+        if (slider.value() == slider.max()) {
+          playing = false;
+        }
+
+        outline.raise();
       }
-
-      outline.raise();
-
       await timer(delay);
     }
   }
@@ -108,7 +106,6 @@ function draw(data) {
     }
 
     playing = !playing;
-    if (playing) play();
   }
 
   async function firstdraw() {
@@ -120,9 +117,11 @@ function draw(data) {
 
   async function slideend(x) {
     chart.redraw(x, 0);
-    await timer(delay / 3);
-    sliding = false;
-    play();
+
+    if (sliding) {
+      sliding = false;
+      await timer(delay / 3);
+    }
   }
 
   function hideOutline() {
